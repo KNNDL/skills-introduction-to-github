@@ -1,0 +1,5 @@
+azure-functions
+azure-storage-blob
+azure-core
+azure-ai-contentsafety
+requests
