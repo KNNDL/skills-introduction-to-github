@@ -1,51 +1,47 @@
+name: Deploy Python project to Azure Function App
+
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
+
+env:
+  AZURE_FUNCTIONAPP_NAME: 'func-apps'   # set this to your function app name on Azure
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'       # set this to the path to your function app project, defaults to the repository root
+  PYTHON_VERSION: '3.12'
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
-    variables:
-      pythonVersion: '3.12'
-      functionAppName: 'func-apps'
-      azureSubscription: 'BeMine-App'
-      azureResourceGroup: 'rg-dfetcu'
-      azureRegion: 'West Europe'
-
+    environment: dev
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@v4
 
-    - name: Set Python version to $(pythonVersion)
-      uses: actions/setup-python@v3
+    # If you want to use Azure RBAC instead of Publish Profile, then uncomment the task below
+    # - name: 'Login via Azure CLI'
+    #   uses: azure/login@v1
+    #   with:
+    #     creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }} # set up AZURE_RBAC_CREDENTIALS secrets in your repository
+
+    - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
+      uses: actions/setup-python@v4
       with:
-        python-version: '$(pythonVersion)'
+        python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Install Python dependencies
+    - name: 'Resolve Project Dependencies Using Pip'
+      shell: bash
       run: |
-        python -m venv .venv
-        source .venv/bin/activate
-        pip install --upgrade pip
-        pip install -r ./requirements.txt
+        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        popd
 
-    - name: Archive function app files
-      run: |
-        zip -r $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip $(Build.SourcesDirectory)
-
-    - name: Publish artifact
-      uses: actions/upload-artifact@v2
+    - name: 'Run Azure Functions Action'
+      uses: Azure/functions-action@v1
+      id: func-apps
       with:
-        name: drop
-        path: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-
-    - task: AzureFunctionApp@2
-      displayName: 'Deploy to Azure Function App'
-      inputs:
-        azureSubscription: '$(azureSubscription)'
-        appName: '$(functionAppName)'
-        package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-        resourceGroupName: '$(azureResourceGroup)'
-        deploymentMethod: 'auto'
-        region: '$(azureRegion)'
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }} # Remove publish-profile to use Azure RBAC
+        scm-do-build-during-deployment: true
+        enable-oryx-build: true
