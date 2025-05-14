@@ -32,3 +32,16 @@ jobs:
         app-name: func-apps
         package: func-app-deploy.zip
         publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+        
+    - task: AzureFunctionApp@2 # Add this at the end of your file
+      inputs:
+        appType: functionAppLinux # This specifies a Linux-based function app
+        #isFlexConsumption: true # Uncomment this line if you are deploying to a Flex Consumption app
+        appName: func-apps
+        package: $(System.ArtifactsDirectory)/**/*.zip
+        deploymentMethod: 'auto' # 'auto' | 'zipDeploy' | 'runFromPackage'. Required. Deployment method. Default: auto.
+        #Uncomment the next lines to deploy to a deployment slot
+        #Note that deployment slots is not supported for Linux Dynamic SKU
+        #deployToSlotOrASE: true
+        #resourceGroupName: '<RESOURCE_GROUP>'
+        #slotName: '<SLOT_NAME>'
