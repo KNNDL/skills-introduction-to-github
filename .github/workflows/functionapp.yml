@@ -1,47 +1,50 @@
-name: Deploy Azure Function App
-
-on:
-  push:
-    branches:
+trigger:
+  branches:
+    include:
       - main
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+pool:
+  vmImage: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+variables:
+  pythonVersion: '3.12'
+  functionAppName: 'func-apps'
+  azureSubscription: 'BeMine-App'
+  azureResourceGroup: 'rg-dfetcu'
+  azureRegion: 'West Europe'
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+steps:
+- task: UsePythonVersion@0
+  displayName: 'Set Python version to $(pythonVersion)'
+  inputs:
+    versionSpec: '$(pythonVersion)'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+- bash: |
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install --upgrade pip
+    pip install -r ./requirements.txt
+  displayName: 'Install Python dependencies'
 
-      - name: Archive project files
-        run: zip -r func-app-deploy.zip . -x '*.git*'
+- task: ArchiveFiles@2
+  displayName: 'Archive function app files'
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)'
+    includeRootFolder: false
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
 
-      - name: Deploy to Azure Function App
-        uses: azure/functions-action@v1
-        with:
-          app-name: func-apps
-          package: func-app-deploy.zip
-          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish artifact'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    artifactName: 'drop'
 
-      - task: AzureFunctionApp@2 # Add this at the end of your file
-        inputs:
-          appType: functionAppLinux # This specifies a Linux-based function app
-          #isFlexConsumption: true # Uncomment this line if you are deploying to a Flex Consumption app
-          appName: func-apps
-          package: $(System.ArtifactsDirectory)/**/*.zip
-          deploymentMethod: "auto" # 'auto' | 'zipDeploy' | 'runFromPackage'. Required. Deployment method. Default: auto.
-          #Uncomment the next lines to deploy to a deployment slot
-          #Note that deployment slots is not supported for Linux Dynamic SKU
-          #deployToSlotOrASE: true
-          #resourceGroupName: '<RESOURCE_GROUP>'
-          #slotName: '<SLOT_NAME>'
+- task: AzureFunctionApp@2
+  displayName: 'Deploy to Azure Function App'
+  inputs:
+    azureSubscription: '$(azureSubscription)'
+    appName: '$(functionAppName)'
+    package: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    resourceGroupName: '$(azureResourceGroup)'
+    deploymentMethod: 'auto'
+    region: '$(azureRegion)'
