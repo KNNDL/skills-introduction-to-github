@@ -3,4 +3,5 @@ azure-storage-blob
 azure-core
 azure-ai-contentsafety
 requests
+logging
 Pillow
