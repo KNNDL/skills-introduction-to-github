@@ -15,30 +15,30 @@ jobs:
       azureRegion: 'West Europe'
 
     steps:
-    - task: UsePythonVersion@0
-      displayName: 'Set Python version to $(pythonVersion)'
-      inputs:
-        versionSpec: '$(pythonVersion)'
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-    - bash: |
+    - name: Set Python version to $(pythonVersion)
+      uses: actions/setup-python@v3
+      with:
+        python-version: '$(pythonVersion)'
+
+    - name: Install Python dependencies
+      run: |
         python -m venv .venv
         source .venv/bin/activate
         pip install --upgrade pip
         pip install -r ./requirements.txt
-      displayName: 'Install Python dependencies'
 
-    - task: ArchiveFiles@2
-      displayName: 'Archive function app files'
-      inputs:
-        rootFolderOrFile: '$(Build.SourcesDirectory)'
-        includeRootFolder: false
-        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    - name: Archive function app files
+      run: |
+        zip -r $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip $(Build.SourcesDirectory)
 
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish artifact'
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-        artifactName: 'drop'
+    - name: Publish artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: drop
+        path: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
 
     - task: AzureFunctionApp@2
       displayName: 'Deploy to Azure Function App'
