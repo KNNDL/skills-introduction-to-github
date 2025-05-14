@@ -21,10 +21,10 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r Functionapp/requirements.txt
+        pip install -r func-app-deploy/requirements.txt
 
     - name: Archive project files
-      run: zip -r functionapp.zip . -x '*.git*'
+      run: zip -r func-app-deploy.zip . -x '*.git*'
 
     - name: Deploy to Azure Function App
       uses: azure/functions-action@v1
