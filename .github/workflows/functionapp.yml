@@ -3,8 +3,9 @@ on:
     branches:
       - main
 
-pool:
-  vmImage: ubuntu-latest
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
 variables:
   pythonVersion: '3.12'
