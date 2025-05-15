@@ -27,13 +27,7 @@ jobs:
         run: |
           zip -r ../skills-introduction-to-github.zip ./*
 
-      - name: 'Az CLI login'
-        uses: azure/login@v1
+      - uses: azure/webapps-deploy@v2
         with:
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
   
-      - name: 'Run az commands'
-        run: |
-          az account show
-          az group list
