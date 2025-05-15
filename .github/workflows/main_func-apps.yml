@@ -39,9 +39,13 @@ jobs:
           rm -rf venv
           rm -f release.zip
 
-      - name: Zip for deployment
+      - name: Zip artifact for deployment
         run: |
-          zip -r release.zip . -x "*.git*" "*.github*" "*venv*" "*release.zip*"
+          zip -r release.zip . \
+            -x "*.venv*" "venv/*" "__pycache__/*" "*.pyc" \
+            -x ".git/*" ".github/*" \
+            -x "local.settings.json"
+
 
       - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
