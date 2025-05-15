@@ -41,7 +41,7 @@ jobs:
 
       - name: Zip for deployment
         run: |
-          zip -r release.zip . -x "*.git*" "*.github*" "*venv*" "*release.zip*" "__pycache__/*" "*.pyc"
+          zip -r release.zip . -x "*.git*" "*.github*" "*venv*" "*release.zip*"
 
 
       - name: Upload deployment artifact
