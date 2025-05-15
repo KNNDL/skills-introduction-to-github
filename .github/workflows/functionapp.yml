@@ -1,47 +1,41 @@
-name: Deploy Python project to Azure Function App
-
+name: Azure Function Deploy With GIT.
 on:
-  push:
-    branches: ["main"]
+  workflow_dispatch:
 
-env:
-  AZURE_FUNCTIONAPP_NAME: 'func-apps'   # set this to your function app name on Azure
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'       # set this to the path to your function app project, defaults to the repository root
-  PYTHON_VERSION: '3.12'
-
-jobs:
-  build-and-deploy:
+permissions:
+      id-token: write
+      contents: read
+jobs: 
+  deploy-functions:
     runs-on: ubuntu-latest
-    environment: dev
     steps:
-    - name: 'Checkout GitHub Action'
-      uses: actions/checkout@v4
+      - name: Check out repository code
+        uses: actions/checkout@v2
 
-    # If you want to use Azure RBAC instead of Publish Profile, then uncomment the task below
-    # - name: 'Login via Azure CLI'
-    #   uses: azure/login@v1
-    #   with:
-    #     creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }} # set up AZURE_RBAC_CREDENTIALS secrets in your repository
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.12"
+          architecture: x64
 
-    - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install required python modules
+        run: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt 
 
-    - name: 'Resolve Project Dependencies Using Pip'
-      shell: bash
-      run: |
-        pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        popd
+      - name: Zip the Azure Function Deploy folder
+        run: |
+          cd skills-introduction-to-github
+          zip -r ../skills-introduction-to-github.zip ./*
 
-    - name: 'Run Azure Functions Action'
-      uses: Azure/functions-action@v1
-      id: func-apps
-      with:
-        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }} # Remove publish-profile to use Azure RBAC
-        scm-do-build-during-deployment: true
-        enable-oryx-build: true
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  
+      - name: 'Run az commands'
+        run: |
+          az account show
+          az group list
