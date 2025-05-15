@@ -5,7 +5,7 @@ import os
 import uuid
 # Configure your connection
 BLOB_CONNECTION_STRING = os.environ["AzureWebJobsStorage"]
-CONTAINER_NAME = "your-container-name"  # Use same container that triggers detect_image
+CONTAINER_NAME = "dfcontainerwesteu"  # Use same container that triggers detect_image
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Upload image function triggered.')
     try:

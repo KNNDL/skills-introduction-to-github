@@ -1,17 +1,11 @@
 {
   "bindings": [
     {
-      "authLevel": "function",
-      "type": "httpTrigger",
+      "name": "blob",
+      "type": "blobTrigger",
       "direction": "in",
-      "name": "req",
-      "methods": ["get", "post"],
-      "route": "detect_image"
-    },
-    {
-      "type": "http",
-      "direction": "out",
-      "name": "res"
+      "path": "dfcontainerwesteu/{name}",
+      "connection": "AzureWebJobsStorage"
     }
   ]
 }
