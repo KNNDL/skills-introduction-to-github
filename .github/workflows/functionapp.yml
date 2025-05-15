@@ -25,7 +25,6 @@ jobs:
 
       - name: Zip the Azure Function Deploy folder
         run: |
-          cd skills-introduction-to-github
           zip -r ../skills-introduction-to-github.zip ./*
 
       - name: 'Az CLI login'
