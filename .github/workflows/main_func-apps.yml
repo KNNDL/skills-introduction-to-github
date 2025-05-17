@@ -67,7 +67,6 @@ jobs:
         uses: Azure/functions-action@v1
         with:
           app-name: 'func-apps'
-          slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_0B2B3229E96E4B858AF1B6FE95F14739 }}
           package: '.'
 
